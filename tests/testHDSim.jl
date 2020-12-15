@@ -20,13 +20,15 @@ function runRiemannProblem1()
     fc = Sirion.SimpleFluxCalculator(rs, bc)
     pg = Sirion.Planar()
     st = Sirion.ZeroSource()
+    cu = Sirion.SimpleCellUpdater()
     sim = Sirion.initHDSim(init_cond,
                           eos,
                           tsf,
                           vm,
                           fc,
                           pg,
-                          st)
+                          st,
+                          cu)
 
     # Run simulation
     while sim.time<0.067

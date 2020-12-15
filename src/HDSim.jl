@@ -12,6 +12,7 @@ mutable struct HDSim
     fc # Flux calculator
     pg # Physical geometry
     st # Source term
+    cu # Cell updater
 end
 
 function primitive2extensive(p::PrimitiveVars,
@@ -47,7 +48,8 @@ function initHDSim(init_cond::HydroSnapshot,
                    vm,
                    fc,
                    pg,
-                   st)
+                   st,
+                   cu)
     conserved_list = initConserved(init_cond, eos)
     return HDSim(0,
                  0,
@@ -58,7 +60,8 @@ function initHDSim(init_cond::HydroSnapshot,
                  vm,
                  fc,
                  pg,
-                 st)
+                 st,
+                 cu)
 end
 
 function updateConserved!(conserved_list::Array{Conserved,1},
@@ -88,30 +91,6 @@ function updatePositions!(grid::Array{Float64, 1},
     end
 end
 
-function extensive2primitive(c::Conserved,
-                             volume::Float64,
-                             eos)
-    density = c.mass/volume
-    velocity = c.momentum/c.mass
-    total_specific_energy = c.energy/c.mass
-    kinetic_specific_energy = 0.5*velocity^2
-    thermal_specific_energy = total_specific_energy-kinetic_specific_energy
-    pressure = calcPressure(eos, density, thermal_specific_energy)
-    return PrimitiveVars(density, pressure, velocity)
-end
-
-function updateCells!(cells::Array{PrimitiveVars,1},
-                           grid::Array{Float64,1},
-                           extensives::Array{Conserved,1},
-                           eos)
-    volumes = diff(grid)
-    for n in 1:length(cells)
-        cells[n] = extensive2primitive(extensives[n],
-                                       volumes[n],
-                                       eos)
-    end
-end
-
 function timeAdvance(hdsim::HDSim)
     dt = calcTimeStep(hdsim.tsf, hdsim.state, hdsim.eos)
     edge_velocities = calcEdgeVelocities(hdsim.vm, hdsim.state)
@@ -130,10 +109,13 @@ function timeAdvance(hdsim::HDSim)
     updatePositions!(hdsim.state.grid,
                      edge_velocities,
                      dt)
-    updateCells!(hdsim.state.cells,
-                 hdsim.state.grid,
+
+    updateCells!(hdsim.cu,
+                 hdsim.state,
                  hdsim.extensives,
+                 hdsim.pg,
                  hdsim.eos)
+
     hdsim.time += dt
     hdsim.cycle += 1
 end

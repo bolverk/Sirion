@@ -9,5 +9,6 @@ include("RigidWall.jl")
 include("SimpleFluxCalculator.jl")
 include("Geometry.jl")
 include("ZeroSource.jl")
+include("SimpleCellUpdater.jl")
 
 end
