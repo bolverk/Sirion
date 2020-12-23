@@ -70,10 +70,8 @@ function updateConserved!(conserved_list::Array{Conserved,1},
                           pg,
                           dt::Float64)
     areas = [calcArea(pg,r) for r in grid]
-    for n in 1:length(conserved_list)
-        conserved_list[n] += dt*areas[n]*fluxes[n]
-        conserved_list[n] -= dt*areas[n+1]*fluxes[n+1]
-    end
+    currents = dt.*areas.*fluxes
+    conserved_list .-= diff(currents)
 end
 
 function updateSourceContribution!(st,
@@ -81,18 +79,13 @@ function updateSourceContribution!(st,
                                   state::HydroSnapshot,
                                   t::Float64,
                                   dt::Float64)
-    contribution = calcSource(st,state,t,dt)
-    for n in 1:length(extensives)
-        extensives[n] += dt*contribution[n]
-    end
+    extensives .+= dt*calcSource(st,state,t,dt)
 end
 
 function updatePositions!(grid::Array{Float64, 1},
                           velocities::Array{Float64, 1},
                           dt::Float64)
-    for n in 1:length(grid)
-        grid[n] += dt*velocities[n]
-    end
+    grid .+= dt*velocities
 end
 
 function timeAdvance(hdsim::HDSim)

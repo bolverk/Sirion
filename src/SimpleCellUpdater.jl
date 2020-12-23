@@ -20,9 +20,6 @@ function updateCells!(cu::SimpleCellUpdater,
                       eos)
     cumulative_volumes = [calcVolume(pg, r) for r in state.grid]
     volumes = diff(cumulative_volumes)
-    for n in 1:length(state.cells)
-        state.cells[n] = extensive2primitive(extensives[n],
-                                             volumes[n],
-                                             eos)
-    end
+    state.cells = [extensive2primitive(e,v,eos)
+                    for (e,v) in zip(extensives, volumes)]
 end
