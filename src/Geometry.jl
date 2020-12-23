@@ -40,7 +40,7 @@ function calcSource(source::SphericalComplamentary,
                     dt::Float64)::Array{Conserved,1}
     cumulative_volumes = [4*pi*r^3/3 for r in state.grid]
     volumes = diff(cumulative_volumes)
-    r_list = midGrid(source.grid)
+    r_list = midGrid(state.grid)
     return [Conserved(0,2*volume*c.pressure/r,0)
-            for (c,r) in zip(state.cells,r_list)]
+            for (c,r,volume) in zip(state.cells,r_list,volumes)]
 end

@@ -34,11 +34,11 @@ function primitive2extensive(p::PrimitiveVars,
                      energy)
 end
 
-function initConserved(state::HydroSnapshot, eos)
-    volumes = diff(state.grid)
-    conserved_list = [
-    primitive2extensive(p,V,eos)
-    for (p,V) in zip(state.cells, volumes)]
+function initConserved(state::HydroSnapshot, pg, eos)
+    cumulative_volume = [calcVolume(pg, r) for r in state.grid]
+    volumes = diff(cumulative_volume)
+    conserved_list = [primitive2extensive(p,V,eos)
+                      for (p,V) in zip(state.cells, volumes)]
     return conserved_list
 end
 
@@ -50,7 +50,7 @@ function initHDSim(init_cond::HydroSnapshot,
                    pg,
                    st,
                    cu)
-    conserved_list = initConserved(init_cond, eos)
+    conserved_list = initConserved(init_cond, pg, eos)
     return HDSim(0,
                  0,
                  init_cond,
@@ -66,10 +66,13 @@ end
 
 function updateConserved!(conserved_list::Array{Conserved,1},
                           fluxes::Array{Conserved,1},
+                          grid::Array{Float64,1},
+                          pg,
                           dt::Float64)
+    areas = [calcArea(pg,r) for r in grid]
     for n in 1:length(conserved_list)
-        conserved_list[n] += dt*fluxes[n]
-        conserved_list[n] -= dt*fluxes[n+1]
+        conserved_list[n] += dt*areas[n]*fluxes[n]
+        conserved_list[n] -= dt*areas[n+1]*fluxes[n+1]
     end
 end
 
@@ -78,8 +81,9 @@ function updateSourceContribution!(st,
                                   state::HydroSnapshot,
                                   t::Float64,
                                   dt::Float64)
-    for (e,sc) in zip(extensives, calcSource(st,state,t,dt))
-        e += dt*sc
+    contribution = calcSource(st,state,t,dt)
+    for n in 1:length(extensives)
+        extensives[n] += dt*contribution[n]
     end
 end
 
@@ -100,6 +104,8 @@ function timeAdvance(hdsim::HDSim)
                         hdsim.eos)
     updateConserved!(hdsim.extensives,
                      fluxes,
+                     hdsim.state.grid,
+                     hdsim.pg,
                      dt)
     updateSourceContribution!(hdsim.st,
                               hdsim.extensives,
