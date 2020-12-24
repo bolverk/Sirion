@@ -89,7 +89,15 @@ function updatePositions!(grid::Array{Float64, 1},
 end
 
 function timeAdvance(hdsim::HDSim)
-    dt = calcTimeStep(hdsim.tsf, hdsim.state, hdsim.eos)
+    cached = Dict("sound_speeds"=>[calcSoundSpeed(hdsim.eos,
+                                                  c.density,
+                                                  c.pressure)
+                                   for c in hdsim.state.cells],
+                   "energies"=>[calcSpecificThermalEnergy(hdsim.eos,
+                                                          c.density,
+                                                          c.pressure)
+                                for c in hdsim.state.cells])
+    dt = calcTimeStep(hdsim.tsf, hdsim.state, hdsim.eos, cached)
     edge_velocities = calcEdgeVelocities(hdsim.vm, hdsim.state)
     fluxes = calcFluxes(hdsim.fc,
                         hdsim.state,
