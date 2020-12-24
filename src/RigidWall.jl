@@ -12,7 +12,8 @@ end
 function calcLeftFlux(bc::RigidWall,
                       state::HydroSnapshot,
                       edge_velocities::Array{Float64,1},
-                      eos)::Conserved
+                      eos,
+                      cached)::Conserved
     return calcFlux(bc.rs,
                     reflect(state.cells[1],edge_velocities[1]),
                     state.cells[1],
@@ -23,7 +24,8 @@ end
 function calcRightFlux(bc::RigidWall,
                        state::HydroSnapshot,
                        edge_velocities::Array{Float64,1},
-                       eos)::Conserved
+                       eos,
+                       cached)::Conserved
     return calcFlux(bc.rs,
                     state.cells[end],
                     reflect(state.cells[end],edge_velocities[end]),

@@ -23,11 +23,13 @@ function calcFluxes(fc::SimpleFluxCalculator,
     left_bc = calcLeftFlux(fc.bc,
                            state,
                            edge_velocities,
-                           eos)
+                           eos,
+                           cached)
     right_bc = calcRightFlux(fc.bc,
                              state,
                              edge_velocities,
-                             eos)
+                             eos,
+                             cached)
     return [[left_bc];
             bulk_fluxes;
             [right_bc]]

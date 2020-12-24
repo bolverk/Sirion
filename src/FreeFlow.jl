@@ -5,7 +5,8 @@ end
 function calcLeftFlux(bc::FreeFlow,
                       state::HydroSnapshot,
                       edge_velocities::Array{Float64,1},
-                      eos)::Conserved
+                      eos,
+                      cached)::Conserved
     return calcFlux(bc.rs,
                     state.cells[1],
                     state.cells[1],
@@ -16,7 +17,8 @@ end
 function calcRightFlux(bc::FreeFlow,
                        state::HydroSnapshot,
                        edge_velocities::Array{Float64,1},
-                       eos)::Conserved
+                       eos,
+                       cached)::Conserved
     return calcFlux(bc.rs,
                     state.cells[end],
                     state.cells[end],

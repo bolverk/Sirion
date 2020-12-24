@@ -56,7 +56,23 @@ function calcTotalEnergyDensity(state::RPCond, eos)::Float64
 	return d*(e+v^2/2)
 end
 
-function calcStarredState(state,
+function calcStarredState(state::PrimitiveVars,
+	 					  sk::Float64,
+						  ss::Float64,
+						  eos)::Conserved
+	dk = state.density
+	pk = state.pressure
+	vk = state.velocity
+	ds = dk*(sk - vk) / (sk - ss)
+	ek = calcTotalEnergyDensity(state, eos)
+	mass = ds
+	momentum = ds*ss
+	energy = ek*ds / dk +
+			ds*(ss - vk)*(ss + pk / dk / (sk - vk));
+	return Conserved(mass, momentum, energy)
+end
+
+function calcStarredState(state::RPCond,
 	 					  sk::Float64,
 						  ss::Float64,
 						  eos)::Conserved
