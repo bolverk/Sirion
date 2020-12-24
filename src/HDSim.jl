@@ -102,7 +102,8 @@ function timeAdvance(hdsim::HDSim)
     fluxes = calcFluxes(hdsim.fc,
                         hdsim.state,
                         edge_velocities,
-                        hdsim.eos)
+                        hdsim.eos,
+                        cached)
     updateConserved!(hdsim.extensives,
                      fluxes,
                      hdsim.state.grid,
