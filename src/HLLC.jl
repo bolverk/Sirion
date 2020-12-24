@@ -4,8 +4,8 @@ include("RPCond.jl")
 struct HLLC
 end
 
-function calcWaveSpeeds(left,
-	 				    right,
+function calcWaveSpeeds(left::PrimitiveVars,
+	 				    right::PrimitiveVars,
 						eos)::Array{Float64,1}
 	dl = left.density;
 	pl = left.pressure;
@@ -22,11 +22,37 @@ function calcWaveSpeeds(left,
 	return [sl, ss, sr];
 end
 
-function calcTotalEnergyDensity(state, eos)::Float64
+function calcWaveSpeeds(left::RPCond,
+	 				    right::RPCond,
+						eos)::Array{Float64,1}
+	dl = left.density;
+	pl = left.pressure;
+	vl = left.velocity;
+	cl = left.sound_speed
+    dr = right.density;
+	pr = right.pressure;
+	vr = right.velocity;
+	cr = right.sound_speed
+	sl = min(vl - cl, vr - cr);
+	sr = max(vl + cl, vr + cr);
+	ss = (pr - pl + dl*vl*(sl - vl) - dr*vr*(sr - vr)) /
+			(dl*(sl - vl) - dr*(sr - vr));
+	return [sl, ss, sr];
+end
+
+function calcTotalEnergyDensity(state::PrimitiveVars, eos)::Float64
 	d = state.density
 	p = state.pressure
 	v = state.velocity
 	e = calcSpecificThermalEnergy(eos, d, p)
+	return d*(e+v^2/2)
+end
+
+function calcTotalEnergyDensity(state::RPCond, eos)::Float64
+	d = state.density
+	p = state.pressure
+	v = state.velocity
+	e = state.energy
 	return d*(e+v^2/2)
 end
 
@@ -56,7 +82,12 @@ function calcMassDensity(state::RPCond,
 	return state.density
 end
 
-function calcMomentumDensity(state,
+function calcMomentumDensity(state::PrimitiveVars,
+	 						 eos)::Float64
+	return state.density*state.velocity
+end
+
+function calcMomentumDensity(state::RPCond,
 	 						 eos)::Float64
 	return state.density*state.velocity
 end
