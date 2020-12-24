@@ -7,9 +7,14 @@ function calcLeftFlux(bc::FreeFlow,
                       edge_velocities::Array{Float64,1},
                       eos,
                       cached)::Conserved
+    rpcond = RPCond(state.cells[1].density,
+                    state.cells[1].pressure,
+                    state.cells[1].velocity,
+                    cached["sound_speeds"][1],
+                    cached["energies"][1])
     return calcFlux(bc.rs,
-                    state.cells[1],
-                    state.cells[1],
+                    rpcond,
+                    rpcond,
                     edge_velocities[1],
                     eos)
 end
@@ -19,9 +24,14 @@ function calcRightFlux(bc::FreeFlow,
                        edge_velocities::Array{Float64,1},
                        eos,
                        cached)::Conserved
+    rpcond = RPCond(state.cells[end].density,
+                    state.cells[end].pressure,
+                    state.cells[end].velocity,
+                    cached["sound_speeds"][end],
+                    cached["energies"][end])
     return calcFlux(bc.rs,
-                    state.cells[end],
-                    state.cells[end],
+                    rpcond,
+                    rpcond,
                     edge_velocities[end],
                     eos)
 end
