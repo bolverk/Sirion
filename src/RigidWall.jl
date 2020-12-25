@@ -40,9 +40,14 @@ function calcRightFlux(bc::RigidWall,
                        edge_velocities::Array{Float64,1},
                        eos,
                        cached)::Conserved
+    rpcond = RPCond(state.cells[end].density,
+                    state.cells[end].pressure,
+                    state.cells[end].velocity,
+                    cached["sound_speeds"][end],
+                    cached["energies"][end])
     return calcFlux(bc.rs,
-                    state.cells[end],
-                    reflect(state.cells[end],edge_velocities[end]),
+                    rpcond,
+                    reflect(rpcond,edge_velocities[end]),
                     edge_velocities[end],
                     eos)
 end

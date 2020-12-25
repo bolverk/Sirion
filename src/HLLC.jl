@@ -4,27 +4,8 @@ include("RPCond.jl")
 struct HLLC
 end
 
-function calcWaveSpeeds(left::PrimitiveVars,
-	 				    right::PrimitiveVars,
-						eos)::Array{Float64,1}
-	dl = left.density;
-	pl = left.pressure;
-	vl = left.velocity;
-	cl = calcSoundSpeed(eos,dl,pl)
-    dr = right.density;
-	pr = right.pressure;
-	vr = right.velocity;
-	cr = calcSoundSpeed(eos, dr, pr)
-	sl = min(vl - cl, vr - cr);
-	sr = max(vl + cl, vr + cr);
-	ss = (pr - pl + dl*vl*(sl - vl) - dr*vr*(sr - vr)) /
-			(dl*(sl - vl) - dr*(sr - vr));
-	return [sl, ss, sr];
-end
-
 function calcWaveSpeeds(left::RPCond,
-	 				    right::RPCond,
-						eos)::Array{Float64,1}
+	 				    right::RPCond)::Array{Float64,1}
 	dl = left.density;
 	pl = left.pressure;
 	vl = left.velocity;
@@ -40,15 +21,7 @@ function calcWaveSpeeds(left::RPCond,
 	return [sl, ss, sr];
 end
 
-function calcTotalEnergyDensity(state::PrimitiveVars, eos)::Float64
-	d = state.density
-	p = state.pressure
-	v = state.velocity
-	e = calcSpecificThermalEnergy(eos, d, p)
-	return d*(e+v^2/2)
-end
-
-function calcTotalEnergyDensity(state::RPCond, eos)::Float64
+function calcTotalEnergyDensity(state::RPCond)::Float64
 	d = state.density
 	p = state.pressure
 	v = state.velocity
@@ -56,31 +29,14 @@ function calcTotalEnergyDensity(state::RPCond, eos)::Float64
 	return d*(e+v^2/2)
 end
 
-function calcStarredState(state::PrimitiveVars,
-	 					  sk::Float64,
-						  ss::Float64,
-						  eos)::Conserved
-	dk = state.density
-	pk = state.pressure
-	vk = state.velocity
-	ds = dk*(sk - vk) / (sk - ss)
-	ek = calcTotalEnergyDensity(state, eos)
-	mass = ds
-	momentum = ds*ss
-	energy = ek*ds / dk +
-			ds*(ss - vk)*(ss + pk / dk / (sk - vk));
-	return Conserved(mass, momentum, energy)
-end
-
 function calcStarredState(state::RPCond,
 	 					  sk::Float64,
-						  ss::Float64,
-						  eos)::Conserved
+						  ss::Float64)::Conserved
 	dk = state.density
 	pk = state.pressure
 	vk = state.velocity
 	ds = dk*(sk - vk) / (sk - ss)
-	ek = calcTotalEnergyDensity(state, eos)
+	ek = calcTotalEnergyDensity(state)
 	mass = ds
 	momentum = ds*ss
 	energy = ek*ds / dk +
@@ -88,71 +44,53 @@ function calcStarredState(state::RPCond,
 	return Conserved(mass, momentum, energy)
 end
 
-function calcMassDensity(state::PrimitiveVars,
-						 eos)::Float64
+function calcMassDensity(state::RPCond)::Float64
 	return state.density
 end
 
-function calcMassDensity(state::RPCond,
-						 eos)::Float64
-	return state.density
-end
-
-function calcMomentumDensity(state::PrimitiveVars,
-	 						 eos)::Float64
+function calcMomentumDensity(state::RPCond)::Float64
 	return state.density*state.velocity
 end
 
-function calcMomentumDensity(state::RPCond,
-	 						 eos)::Float64
+function primitive2conserved(state::RPCond)::Conserved
+	return Conserved(calcMassDensity(state),
+					 calcMomentumDensity(state),
+					 calcTotalEnergyDensity(state))
+end
+
+function calcMassFlux(state::RPCond)::Float64
 	return state.density*state.velocity
 end
 
-function primitive2conserved(state,
-							 eos)::Conserved
-	return Conserved(calcMassDensity(state, eos),
-					 calcMomentumDensity(state, eos),
-					 calcTotalEnergyDensity(state, eos))
-end
-
-function calcMassFlux(state,
-	 				  eos)::Float64
-	return state.density*state.velocity
-end
-
-function calcMomentumFlux(state,
-	 					  eos)::Float64
+function calcMomentumFlux(state::RPCond)::Float64
 	return state.density*state.velocity^2+state.pressure
 end
 
-function calcEnergyFlux(state,
-					    eos)::Float64
-	energy_density = calcTotalEnergyDensity(state,eos)
+function calcEnergyFlux(state::RPCond)::Float64
+	energy_density = calcTotalEnergyDensity(state)
 	enthalpy = energy_density+state.pressure
 	return enthalpy*state.velocity
 end
 
-function primitive2flux(state,
-						eos)::Conserved
-	return Conserved(calcMassFlux(state, eos),
-					 calcMomentumFlux(state, eos),
-					 calcEnergyFlux(state, eos))
+function primitive2flux(state::RPCond)::Conserved
+	return Conserved(calcMassFlux(state),
+					 calcMomentumFlux(state),
+					 calcEnergyFlux(state))
 end
 
-function calcRestFrameFluxes(left,
-							 right,
-							 eos)::Conserved
+function calcRestFrameFluxes(left::RPCond,
+							 right::RPCond)::Conserved
 
-	ws = calcWaveSpeeds(left, right, eos)
+	ws = calcWaveSpeeds(left, right)
 
-	ul = primitive2conserved(left, eos)
-	ur = primitive2conserved(right, eos)
+	ul = primitive2conserved(left)
+	ur = primitive2conserved(right)
 
-	fl = primitive2flux(left, eos)
-	fr = primitive2flux(right, eos)
+	fl = primitive2flux(left)
+	fr = primitive2flux(right)
 
-	usl = calcStarredState(left, ws[1], ws[2], eos)
-	usr = calcStarredState(right, ws[3], ws[2], eos)
+	usl = calcStarredState(left, ws[1], ws[2])
+	usr = calcStarredState(right, ws[3], ws[2])
 
 	if ws[1]>0
 		return fl
@@ -175,13 +113,6 @@ function boostFlux(flux::Conserved,
 					 flux.momentum*velocity)
 end
 
-function boostCell(p::PrimitiveVars,
-				   velocity::Float64)::PrimitiveVars
-	return PrimitiveVars(p.density,
-					 	 p.pressure,
-					 	 p.velocity-velocity)
-end
-
 function boostCell(p::RPCond,
 				   velocity::Float64)::RPCond
 	return RPCond(p.density,
@@ -192,13 +123,12 @@ function boostCell(p::RPCond,
 end
 
 function calcFlux(rs::HLLC,
-				  left,
-				  right,
+				  left::RPCond,
+				  right::RPCond,
 				  velocity::Float64,
 				  eos)::Conserved
 
 	return boostFlux(calcRestFrameFluxes(boostCell(left,-velocity),
-										 boostCell(right,-velocity),
-										 eos),
+										 boostCell(right,-velocity)),
 					 velocity)
 end
