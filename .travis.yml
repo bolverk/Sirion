@@ -8,5 +8,6 @@ julia:
 
 install:
 - julia --project -e 'import Pkg; Pkg.add("Plots");'
+- julia --project -e 'import Pkg; Pkg.add("FlameGraphs");'
 
 script: julia -L src/Sirion.jl tests/runtests.jl
