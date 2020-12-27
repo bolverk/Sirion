@@ -1,4 +1,5 @@
 using Test
+using Sirion
 
 function testBackAndForthPressureEnergy()
     d_list = [10.0^n for n in -5:5]

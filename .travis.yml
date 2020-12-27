@@ -11,4 +11,4 @@ install:
 - julia --project -e 'import Pkg; Pkg.add("FlameGraphs");'
 - julia --project -e 'import Pkg; Pkg.add("Polynomials");'
 
-script: julia -L src/Sirion.jl tests/runtests.jl
+script: julia --project tests/runtests.jl

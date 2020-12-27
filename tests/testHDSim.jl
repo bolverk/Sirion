@@ -3,7 +3,8 @@ using Plots
 using Profile
 using FlameGraphs
 using Polynomials
-include("../src/Sirion.jl")
+using Sirion
+#include("../src/Sirion.jl")
 
 function calcRelativeDiff(x::Float64, y::Float64)::Float64
     return abs(x-y)/(abs(x)+abs(y))
