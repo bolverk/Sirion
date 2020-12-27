@@ -128,7 +128,7 @@ function calcFlux(rs::HLLC,
 				  velocity::Float64,
 				  eos)::Conserved
 
-	return boostFlux(calcRestFrameFluxes(boostCell(left,-velocity),
-										 boostCell(right,-velocity)),
+	return boostFlux(calcRestFrameFluxes(boostCell(left,velocity),
+										 boostCell(right,velocity)),
 					 velocity)
 end

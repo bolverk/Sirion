@@ -82,11 +82,11 @@ function updateSourceContribution!(st,
     extensives .+= dt*calcSource(st,state,t,dt)
 end
 
-function updatePositions!(grid::Array{Float64, 1},
-                          velocities::Array{Float64, 1},
-                          dt::Float64)
-    grid .+= dt*velocities
-end
+#function updatePositions!(grid::Array{Float64, 1},
+#                          velocities::Array{Float64, 1},
+#                          dt::Float64)
+#    grid .+= dt*velocities
+#end
 
 function timeAdvance(hdsim::HDSim)
     cached = Dict("sound_speeds"=>[calcSoundSpeed(hdsim.eos,
@@ -114,9 +114,13 @@ function timeAdvance(hdsim::HDSim)
                               hdsim.state,
                               hdsim.time,
                               dt)
-    updatePositions!(hdsim.state.grid,
-                     edge_velocities,
-                     dt)
+    #updatePositions!(hdsim.state.grid,
+    #                 edge_velocities,
+    #                 dt)
+    #hdsim.state.grid .+= dt*edge_velocities
+    for n in 1:length(edge_velocities)
+        hdsim.state.grid[n] += dt*edge_velocities[n]
+    end
 
     updateCells!(hdsim.cu,
                  hdsim.state,
