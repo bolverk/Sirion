@@ -6,4 +6,4 @@ julia:
   - 1.0.6
   - 1.5.2
 
-script: julia -L src/Sirion.jl tests/runtest.jl
+script: julia -L src/Sirion.jl tests/runtests.jl
